@@ -17,8 +17,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
     let file = File::open(cli.input)?;
     let reader = BufReader::new(file);
 
-    match cli.problem.as_str() {
-        "01" => day01::day01(reader),
+    let answer = match cli.problem.as_str() {
+        "01.1" => day01::part1(reader),
+        "01.2" => day01::part2(reader),
         _ => Err("Invalid problem".into()),
-    }
+    }?;
+
+    println!("{}", answer);
+    Ok(())
 }
