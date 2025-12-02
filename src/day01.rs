@@ -1,11 +1,10 @@
-use std::io;
+use std::io::BufRead;
 
-fn main() -> io::Result<()> {
+pub fn day01(input: impl BufRead) -> Result<(), Box<dyn std::error::Error>> {
     let mut position = 50;
     let mut zero_count = 0;
 
-    let lines = io::stdin().lines();
-
+    let lines = input.lines();
     for line in lines {
         let line = line.unwrap();
         let (direction, n) = line.split_at(1);
