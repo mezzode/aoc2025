@@ -36,7 +36,7 @@ pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::
                 None
             };
 
-            sum += invalid_ids_for_length(
+            sum += part1_invalid_ids_for_length(
                 digit_length,
                 min_for_digit_length,
                 max_for_digit_length,
@@ -50,7 +50,7 @@ pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::
     Ok(sum.to_string())
 }
 
-pub fn invalid_ids_for_length(
+pub fn part1_invalid_ids_for_length(
     length: usize,
     min: Option<String>,
     max: Option<String>,
@@ -105,5 +105,19 @@ pub fn invalid_ids_for_length(
         println!("Invalid IDs for length {}: {:?}", length, invalid_ids);
     }
 
-    return Ok(invalid_ids);
+    Ok(invalid_ids)
+}
+
+/**
+ * For Part 2, IDs are invalid if made only of a string of digits repeated *at least* twice
+ */
+pub fn part2_invalid_ids_for_length(
+    length: usize,
+    min: Option<String>,
+    max: Option<String>,
+    verbose: bool,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    // Check each possible prefix length, from 1 to length / 2
+    
+    Err("Not implemented".into())
 }
