@@ -1,6 +1,6 @@
 use std::io::BufRead;
 
-pub fn part1(input: impl BufRead) -> Result<i32, Box<dyn std::error::Error>> {
+pub fn part1(input: impl BufRead) -> Result<String, Box<dyn std::error::Error>> {
     let mut position = 50;
     let mut zero_count = 0;
 
@@ -23,10 +23,10 @@ pub fn part1(input: impl BufRead) -> Result<i32, Box<dyn std::error::Error>> {
             zero_count += 1;
         }
     }
-    Ok(zero_count)
+    Ok(zero_count.to_string())
 }
 
-pub fn part2(input: impl BufRead) -> Result<i32, Box<dyn std::error::Error>> {
+pub fn part2(input: impl BufRead) -> Result<String, Box<dyn std::error::Error>> {
     let mut position = 50;
     let mut zero_count = 0;
 
@@ -62,5 +62,5 @@ pub fn part2(input: impl BufRead) -> Result<i32, Box<dyn std::error::Error>> {
         }
         eprintln!("Normalized Pos: {}", position);
     }
-    Ok(zero_count)
+    Ok(zero_count.to_string())
 }
