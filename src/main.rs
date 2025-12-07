@@ -4,6 +4,7 @@ use std::io::BufReader;
 
 mod day01;
 mod day02;
+mod day03;
 
 #[derive(Parser)]
 struct Cli {
@@ -25,6 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         "01.1" => day01::part1(reader),
         "01.2" => day01::part2(reader),
         "02.1" => day02::part1(reader, cli.verbose),
+        "03.1" => day03::part1(reader, cli.verbose),
         _ => Err("Invalid problem".into()),
     }?;
 
