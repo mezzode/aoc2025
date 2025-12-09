@@ -1,6 +1,31 @@
 use std::{collections::HashMap, io::BufRead};
 
 pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
+    let (filled, x_len, y_len) = build_filled(input, verbose)?;
+
+    if verbose {
+        println!("Filled:\n{:?}", filled);
+    }
+
+    let bounds = Some(Bounds {
+        x_min: Some(0),
+        y_min: Some(0),
+        x_max: Some(x_len.try_into()?),
+        y_max: Some(y_len.try_into()?),
+    });
+
+    let accessible_count = filled
+        .keys()
+        .filter(|(x, y)| removable(&filled, *x, *y, &bounds))
+        .count();
+
+    Ok(accessible_count.to_string())
+}
+
+fn build_filled(
+    input: impl BufRead,
+    verbose: bool,
+) -> Result<(HashMap<(i32, i32), char>, usize, usize), Box<dyn std::error::Error>> {
     let mut filled = HashMap::<(i32, i32), _>::new();
     let mut x_len = 0;
     let mut y_len = 0;
@@ -18,47 +43,43 @@ pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::
         }
         y_len = y + 1;
     }
+    Ok((filled, x_len, y_len))
+}
 
-    if verbose {
-        println!("Filled:\n{:?}", filled);
-    }
-
-    let mut accessible_count = 0u32;
-    for (x, y) in filled.keys() {
-        if neighbouring_coords(
-            (*x).try_into()?,
-            (*y).try_into()?,
-            Some(0),
-            Some(0),
-            Some(x_len.try_into()?),
-            Some(y_len.try_into()?),
-        )
-        .filter(|(other_x, other_y)| filled.contains_key(&(*other_x, *other_y)))
+fn removable(filled: &HashMap<(i32, i32), char>, x: i32, y: i32, bounds: &Option<Bounds>) -> bool {
+    neighbouring_coords(x, y, bounds)
+        .filter(|(other_x, other_y)| (&filled).contains_key(&(*other_x, *other_y)))
         .count()
-            < 4
-        {
-            accessible_count += 1;
-        }
-    }
+        < 4
+}
 
-    Ok(accessible_count.to_string())
+struct Bounds {
+    x_min: Option<i32>,
+    x_max: Option<i32>,
+    y_min: Option<i32>,
+    y_max: Option<i32>,
 }
 
 fn neighbouring_coords(
     x: i32,
     y: i32,
-    min_x: Option<i32>,
-    min_y: Option<i32>,
-    max_x: Option<i32>,
-    max_y: Option<i32>,
+    bounds: &Option<Bounds>,
 ) -> impl Iterator<Item = (i32, i32)> {
     (x - 1..=x + 1)
         .flat_map(move |x| (y - 1..=y + 1).map(move |y: i32| (x, y)))
         .filter(move |(other_x, other_y)| !(*other_x == x && *other_y == y))
         .filter(move |(x, y)| {
-            min_x.is_none_or(|min_x| min_x <= *x)
-                && min_y.is_none_or(|min_y| min_y <= *y)
-                && max_x.is_none_or(|max_x| max_x >= *x)
-                && max_y.is_none_or(|max_y| max_y >= *y)
+            bounds.as_ref().is_none_or(|bounds| {
+                let Bounds {
+                    x_min,
+                    x_max,
+                    y_min,
+                    y_max,
+                } = bounds;
+                x_min.is_none_or(|x_min| x_min <= *x)
+                    && y_min.is_none_or(|y_min| y_min <= *y)
+                    && x_max.is_none_or(|x_max| x_max >= *x)
+                    && y_max.is_none_or(|y_max| y_max >= *y)
+            })
         })
 }
