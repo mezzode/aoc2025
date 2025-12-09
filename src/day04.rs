@@ -22,6 +22,37 @@ pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::
     Ok(accessible_count.to_string())
 }
 
+pub fn part2(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
+    let (mut filled, x_len, y_len) = build_filled(input, verbose)?;
+
+    let bounds = Some(Bounds {
+        x_min: Some(0),
+        y_min: Some(0),
+        x_max: Some(x_len.try_into()?),
+        y_max: Some(y_len.try_into()?),
+    });
+
+    let mut removeable = filled
+        .keys()
+        .filter(|(x, y)| removable(&filled, *x, *y, &bounds))
+        .copied()
+        .collect::<Vec<_>>();
+
+    let mut removed_count = 0;
+    while !removeable.is_empty() {
+        removed_count += removeable.len();
+        for x_y in removeable {
+            filled.remove(&x_y);
+        }
+        removeable = filled
+            .keys()
+            .filter(|(x, y)| removable(&filled, *x, *y, &bounds))
+            .copied()
+            .collect::<Vec<_>>();
+    }
+    Ok(removed_count.to_string())
+}
+
 fn build_filled(
     input: impl BufRead,
     verbose: bool,
