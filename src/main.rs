@@ -5,6 +5,7 @@ use std::io::{BufRead, BufReader};
 mod day01;
 mod day02;
 mod day03;
+mod day04;
 
 #[derive(Parser)]
 /// Advent of Code 2025 Solver CLI
@@ -42,6 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         "01.2" => day01::part2(reader),
         "02.1" => day02::part1(reader, cli.verbose),
         "03.1" => day03::part1(reader, cli.verbose),
+        "04.1" => day04::part1(reader, cli.verbose),
         _ => Err("Invalid problem".into()),
     }?;
 
