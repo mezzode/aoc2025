@@ -6,6 +6,7 @@ mod day01;
 mod day02;
 mod day03;
 mod day04;
+mod day05;
 
 #[derive(Parser)]
 /// Advent of Code 2025 Solver CLI
@@ -45,6 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         "03.1" => day03::part1(reader, cli.verbose),
         "04.1" => day04::part1(reader, cli.verbose),
         "04.2" => day04::part2(reader, cli.verbose),
+        "05.1" => day05::part1(reader, cli.verbose),
         _ => Err("Invalid problem".into()),
     }?;
 
