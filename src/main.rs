@@ -1,15 +1,24 @@
 use clap::Parser;
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufRead, BufReader};
 
 mod day01;
 mod day02;
 mod day03;
 
 #[derive(Parser)]
+/// Advent of Code 2025 Solver CLI
 struct Cli {
     problem: String, // TODO: use enum instead
-    input: String,
+
+    /// Directly provide input as an argument.
+    /// If neither this nor a --file is provided, stdin is used.
+    input: Option<String>,
+
+    /// File to read input from.
+    /// If neither this nor an [INPUT] is provided, stdin is used.
+    #[arg(short, long, conflicts_with = "input")]
+    file: Option<String>,
 
     #[arg(short, long)]
     verbose: bool,
@@ -19,8 +28,14 @@ struct Cli {
 fn main() -> Result<(), Box<dyn std::error::Error>>{
     let cli = Cli::parse();
 
-    let file = File::open(cli.input)?;
-    let reader = BufReader::new(file);
+    let reader: Box<dyn BufRead> = if let Some(input) = &cli.input {
+        Box::new(BufReader::new(input.as_bytes()))
+    } else if let Some(file) = cli.file {
+        let file = File::open(file)?;
+        Box::new(BufReader::new(file))
+    } else {
+        Box::new(BufReader::new(std::io::stdin()))
+    };
 
     let answer = match cli.problem.as_str() {
         "01.1" => day01::part1(reader),
