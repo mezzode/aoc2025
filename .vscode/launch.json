@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug executable 'aoc2025'",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=aoc2025"
+                ]
+            },
+            "args": [
+                "${input:problem}",
+                "-f",
+                "${input:file}",
+                "-v"
+            ]
+        },
+    ],
+    "inputs": [
+        {
+            "type": "promptString",
+            "id": "problem",
+            "description": "Problem",
+            "default": "01.1"
+        },
+        {
+            "type": "promptString",
+            "id": "file",
+            "description": "Input file",
+            "default": "../aoc2025-inputs/test01.txt"
+        },
+    ],
+}
