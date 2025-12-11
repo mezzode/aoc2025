@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::{BufRead, Lines}};
+use std::{collections::{HashMap, HashSet}, io::{BufRead, Lines}};
 
 pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
     let mut lines = input.lines();
@@ -34,6 +34,51 @@ pub fn part1(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::
     }
 
     Ok(splits.to_string())
+}
+
+pub fn part2(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
+        let mut lines = input.lines();
+
+    let start: usize = get_start(&mut lines)?;
+    // Map from beam index on current level to count of universes that beam could have originated from
+    let mut beams_to_universes = HashMap::from([(start, 1u64)]);
+
+    for line in lines {
+        let line = line?;
+        let splitters = find_splitters(line);
+
+        let mut new_beams = HashMap::<usize, u64>::new();
+        for splitter in splitters {
+            if let Some(universes) = beams_to_universes.remove(&splitter) {
+                let split_beams = [splitter - 1, splitter + 1];
+                for beam in split_beams {
+                    if let Some(new_beams_universes) = new_beams.get_mut(&beam) {
+                        // Add possible prior universes from other side
+                        *new_beams_universes += universes;
+                    } else {
+                        new_beams.insert(beam, universes);
+                    }
+                }
+            }
+        }
+
+        if verbose {
+            println!("Beams: {:?}", beams_to_universes);
+            println!("New beams: {:?}", new_beams);
+        }
+
+        for (beam, universes) in new_beams {
+            if let Some(old_universes) = beams_to_universes.get_mut(&beam) {
+                // if a continuing beam could have also been produced by splitter, add those universes
+                *old_universes += universes;
+            } else {
+                beams_to_universes.insert(beam, universes);
+            }
+        }
+    }
+
+    let universes: u64 = beams_to_universes.values().sum();
+    Ok(universes.to_string())
 }
 
 fn get_start(lines: &mut Lines<impl BufRead>) -> Result<usize, Box<dyn std::error::Error>> {
