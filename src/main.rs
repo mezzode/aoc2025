@@ -9,6 +9,7 @@ mod day04;
 mod day05;
 mod day06;
 mod day07;
+mod day08;
 
 #[derive(Parser)]
 /// Advent of Code 2025 Solver CLI
@@ -26,6 +27,10 @@ struct Cli {
 
     #[arg(short, long)]
     verbose: bool,
+
+    /// Run in test mode, for problems that have a different definition for the test example. 
+    #[arg(short, long, default_value_t = false)]
+    test: bool,
 }
 
 
@@ -54,6 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         "06.2" => day06::part2(reader, cli.verbose),
         "07.1" => day07::part1(reader, cli.verbose),
         "07.2" => day07::part2(reader, cli.verbose),
+        "08.1" => day08::part1(reader, cli.verbose, cli.test),
         _ => Err("Invalid problem".into()),
     }?;
 
