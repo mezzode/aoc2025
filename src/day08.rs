@@ -13,28 +13,8 @@ pub fn part1(
     verbose: bool,
     test: bool,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    let lines = input.lines();
-    let boxes: Vec<Location> = lines
-        .map(|line| {
-            line.map(|s| {
-                s.split(',')
-                    .map(|coord| coord.parse::<i64>())
-                    .collect::<Result<Vec<_>, _>>()
-            })
-        })
-        .collect::<Result<Result<Vec<_>, _>, _>>()??;
-
-    let mut distances = boxes
-        .iter()
-        .enumerate()
-        .flat_map(|i_a| boxes.iter().enumerate().map(move |j_b| (i_a, j_b)))
-        .filter(|((i, _), (j, _))| *i < *j) // Filter out themselves and only calculate if not already previously
-        .map(|((i, a), (j, b))| {
-            let distance = distance(a, b);
-            distance.map(|d| (d, i, j))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    distances.sort_by(|(d1, _, _), (d2, _, _)| d1.total_cmp(d2));
+    let boxes = parse(input)?;
+    let distances = distances(&boxes)?;
     let indices_to_connect = distances
         .iter()
         .take(if test { TEST_CONNS } else { CONNS })
@@ -55,6 +35,35 @@ pub fn part1(
         .take(3)
         .product::<usize>()
         .to_string())
+}
+
+fn parse(input: impl BufRead) -> Result<Vec<Location>, Box<dyn std::error::Error>> {
+    let lines = input.lines();
+    let boxes: Vec<Location> = lines
+        .map(|line| {
+            line.map(|s| {
+                s.split(',')
+                    .map(|coord| coord.parse::<i64>())
+                    .collect::<Result<Vec<_>, _>>()
+            })
+        })
+        .collect::<Result<Result<Vec<_>, _>, _>>()??;
+    Ok(boxes)
+}
+
+fn distances(boxes: &Vec<Location>) -> Result<Vec<(f64, usize, usize)>, Box<dyn std::error::Error>> {
+    let mut distances = boxes
+        .iter()
+        .enumerate()
+        .flat_map(|i_a| boxes.iter().enumerate().map(move |j_b| (i_a, j_b)))
+        .filter(|((i, _), (j, _))| *i < *j) // Filter out themselves and only calculate if not already previously
+        .map(|((i, a), (j, b))| {
+            let distance = distance(a, b);
+            distance.map(|d| (d, i, j))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    distances.sort_by(|(d1, _, _), (d2, _, _)| d1.total_cmp(d2));
+    Ok(distances)
 }
 
 fn distance(a: &Location, b: &Location) -> Result<f64, Box<dyn std::error::Error>> {
