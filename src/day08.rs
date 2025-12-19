@@ -8,6 +8,8 @@ type Location = Vec<i64>; // Strictly speaking should be of length 3
 const TEST_CONNS: usize = 10;
 const CONNS: usize = 1000;
 
+const X: usize = 0;
+
 pub fn part1(
     input: impl BufRead,
     verbose: bool,
@@ -37,6 +39,64 @@ pub fn part1(
         .to_string())
 }
 
+pub fn part2(input: impl BufRead, verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
+    let boxes = parse(input)?;
+    let distances = distances(&boxes)?;
+
+    // TODO: Probs worth having a whole circuit/graph class in future
+    let mut circuits: HashMap<usize, HashSet<usize>> = HashMap::new();
+    // Map from box index to id of the circuit it belongs to
+    let mut circuits_map: HashMap<usize, usize> = HashMap::new();
+    let mut circuit_id: usize = 0;
+
+    for (_, i, j) in distances.into_iter() {
+        if let Some(&id) = circuits_map.get(&i)
+            && let Some(&other_id) = circuits_map.get(&j)
+        {
+            if id == other_id {
+                // Already in same circuit so do nothing
+                continue;
+            }
+            // Merge circuits
+            let other_circuit = circuits.remove(&other_id).ok_or("Circuit does not exist")?;
+            for box_index in &other_circuit {
+                circuits_map.insert(*box_index, id);
+            }
+            let circuit = circuits.get_mut(&id).ok_or("Circuit does not exist")?;
+            circuit.extend(other_circuit);
+        } else if let Some(&id) = circuits_map.get(&i) {
+            let circuit = circuits.get_mut(&id).ok_or("Circuit does not exist")?;
+            circuit.insert(j);
+            circuits_map.insert(j, id);
+        } else if let Some(&id) = circuits_map.get(&j) {
+            let circuit = circuits.get_mut(&id).ok_or("Circuit does not exist")?;
+            circuit.insert(i);
+            circuits_map.insert(i, id);
+        } else {
+            let new_circuit = HashSet::from([i, j]);
+            circuits.insert(circuit_id, new_circuit);
+            circuits_map.insert(i, circuit_id);
+            circuits_map.insert(j, circuit_id);
+            circuit_id += 1;
+        };
+        if verbose {
+            println!("{:?}", circuits_map);
+        }
+
+        if circuits.len() == 1
+            && circuits
+                .iter()
+                .next()
+                .and_then(|(_, circuit)| Some(circuit.len() == boxes.len()))
+                .ok_or("Failed to get circuit")?
+        {
+            return Ok((boxes[i][X] * boxes[j][X]).to_string());
+        }
+    }
+
+    Err("No solution found".into())
+}
+
 fn parse(input: impl BufRead) -> Result<Vec<Location>, Box<dyn std::error::Error>> {
     let lines = input.lines();
     let boxes: Vec<Location> = lines
@@ -51,7 +111,9 @@ fn parse(input: impl BufRead) -> Result<Vec<Location>, Box<dyn std::error::Error
     Ok(boxes)
 }
 
-fn distances(boxes: &Vec<Location>) -> Result<Vec<(f64, usize, usize)>, Box<dyn std::error::Error>> {
+fn distances(
+    boxes: &Vec<Location>,
+) -> Result<Vec<(f64, usize, usize)>, Box<dyn std::error::Error>> {
     let mut distances = boxes
         .iter()
         .enumerate()

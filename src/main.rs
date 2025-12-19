@@ -60,6 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>{
         "07.1" => day07::part1(reader, cli.verbose),
         "07.2" => day07::part2(reader, cli.verbose),
         "08.1" => day08::part1(reader, cli.verbose, cli.test),
+        "08.2" => day08::part2(reader, cli.verbose),
         _ => Err("Invalid problem".into()),
     }?;
 
