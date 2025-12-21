@@ -1,17 +1,21 @@
 use itertools::Itertools;
-use std::io::BufRead;
+use std::{collections::HashMap, io::BufRead};
 
 pub fn part1(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
     let lines = input.lines();
 
-    let total_presses = lines.map(|line| solve_part1(line?)).sum::<Result<usize, _>>()?;
+    let total_presses = lines
+        .map(|line| solve_part1(line?))
+        .sum::<Result<usize, _>>()?;
     Ok(total_presses.to_string())
 }
 
 pub fn part2(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
     let lines = input.lines();
 
-    let total_presses = lines.map(|line| solve_part2(line?)).sum::<Result<usize, _>>()?;
+    let total_presses = lines
+        .map(|line| solve_part2(line?))
+        .sum::<Result<usize, _>>()?;
     Ok(total_presses.to_string())
 }
 
@@ -22,14 +26,15 @@ fn solve_part1(line: String) -> Result<usize, Box<dyn std::error::Error>> {
     // TODO: For Part 2 this is not true, can press buttons multiple times to reach target joltages
     for num_buttons in 1..=buttons.len() {
         for buttons_active in buttons.iter().combinations(num_buttons) {
-            let toggles = buttons_active
-                .iter()
-                .fold(vec![0; indicator_target.len()], |mut acc, button| {
-                    for i in *button {
-                        acc[*i] += 1;
-                    }
-                    acc
-                });
+            let toggles =
+                buttons_active
+                    .iter()
+                    .fold(vec![0; indicator_target.len()], |mut acc, button| {
+                        for i in *button {
+                            acc[*i] += 1;
+                        }
+                        acc
+                    });
 
             let state = toggles
                 .iter()
@@ -38,7 +43,6 @@ fn solve_part1(line: String) -> Result<usize, Box<dyn std::error::Error>> {
             if state == indicator_target {
                 return Ok(buttons_active.len());
             }
-            
         }
     }
 
@@ -48,21 +52,43 @@ fn solve_part1(line: String) -> Result<usize, Box<dyn std::error::Error>> {
 fn solve_part2(line: String) -> Result<usize, Box<dyn std::error::Error>> {
     let (_, buttons, joltage_target) = parse_line(line)?;
 
+    // Memoize results based on Vec of button indices pressed to resulting joltages
+    let mut memo: HashMap<Vec<usize>, Vec<i32>> = HashMap::new(); // TODO: only need to keep memo for prev length
+
     let mut num_buttons = 1;
     loop {
-        for buttons_active in buttons.iter().combinations_with_replacement(num_buttons) {
-            let toggles = buttons_active
-                .iter()
-                .fold(vec![0; joltage_target.len()], |mut acc, button| {
-                    for i in *button {
-                        acc[*i] += 1;
-                    }
-                    acc
-                });
+        for mut buttons_active in (0..buttons.len()).combinations_with_replacement(num_buttons) {
+            if buttons_active.len() == 1 {
+                let toggles = buttons_active.iter().fold(
+                    vec![0; joltage_target.len()],
+                    |mut acc, button_index| {
+                        for i in buttons[*button_index].iter() {
+                            acc[*i] += 1;
+                        }
+                        acc
+                    },
+                );
 
-            if toggles == joltage_target {
-                return Ok(buttons_active.len());
+                if toggles == joltage_target {
+                    return Ok(buttons_active.len());
+                }
+                memo.insert(buttons_active, toggles);
+                continue;
             }
+
+            let next = buttons_active.pop().ok_or("Was empty")?;
+            let mut joltages = memo
+                .get(&buttons_active)
+                .ok_or("Not already calculated")?
+                .clone();
+            for i in buttons[next].iter() {
+                joltages[*i] += 1;
+            }
+            if joltages == joltage_target {
+                return Ok(num_buttons);
+            }
+            buttons_active.push(next);
+            memo.insert(buttons_active, joltages);
         }
         num_buttons += 1;
     }
