@@ -53,44 +53,43 @@ fn solve_part2(line: String) -> Result<usize, Box<dyn std::error::Error>> {
     let (_, buttons, joltage_target) = parse_line(line)?;
 
     // Memoize results based on Vec of button indices pressed to resulting joltages
-    let mut memo: HashMap<Vec<usize>, Vec<i32>> = HashMap::new(); // TODO: only need to keep memo for prev length
+    let mut memo: HashMap<Vec<usize>, Vec<i32>> = HashMap::new();
 
     let mut num_buttons = 1;
     loop {
-        for mut buttons_active in (0..buttons.len()).combinations_with_replacement(num_buttons) {
-            if buttons_active.len() == 1 {
-                let toggles = buttons_active.iter().fold(
-                    vec![0; joltage_target.len()],
-                    |mut acc, button_index| {
-                        for i in buttons[*button_index].iter() {
-                            acc[*i] += 1;
-                        }
-                        acc
-                    },
-                );
-
-                if toggles == joltage_target {
-                    return Ok(buttons_active.len());
+        let mut new_memo = HashMap::new();
+        for (button_index, button) in buttons.iter().enumerate() {
+            if num_buttons == 1 {
+                let mut joltages = vec![0; joltage_target.len()];
+                for i in button {
+                    joltages[*i] += 1;
                 }
-                memo.insert(buttons_active, toggles);
+
+                if joltages == joltage_target {
+                    return Ok(num_buttons);
+                }
+                new_memo.insert(vec![button_index], joltages);
                 continue;
             }
 
-            let next = buttons_active.pop().ok_or("Was empty")?;
-            let mut joltages = memo
-                .get(&buttons_active)
-                .ok_or("Not already calculated")?
-                .clone();
-            for i in buttons[next].iter() {
-                joltages[*i] += 1;
+            for (mut buttons_active, mut joltages) in memo.clone().drain() {
+                for i in button {
+                    joltages[*i] += 1;
+                }
+                if joltages == joltage_target {
+                    return Ok(num_buttons);
+                }
+
+                // Cull invalid search branches
+                let too_high = (0..joltages.len()).any(|i| joltages[i] > joltage_target[i]);
+                if !too_high {
+                    buttons_active.push(button_index);
+                    new_memo.insert(buttons_active, joltages);
+                }
             }
-            if joltages == joltage_target {
-                return Ok(num_buttons);
-            }
-            buttons_active.push(next);
-            memo.insert(buttons_active, joltages);
         }
         num_buttons += 1;
+        memo = new_memo;
     }
 }
 
