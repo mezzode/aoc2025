@@ -6,19 +6,7 @@ use std::{
 use itertools::process_results;
 
 pub fn part1(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
-    let lines = input.lines();
-    let graph = process_results(lines, |lines| {
-        lines
-            .map(
-                |l| -> Result<(String, HashSet<String>), Box<dyn std::error::Error>> {
-                    let (source, dests) = l.split_once(": ").ok_or("Invalid line")?;
-                    let dests = dests.split(' ').map(String::from).collect::<HashSet<_>>();
-                    Ok((source.to_string(), dests))
-                },
-            )
-            .collect::<Result<HashMap<_, _>, _>>()
-    })??;
-
+    let graph = build_graph(input)?;
     let mut paths = 0u64;
     let mut to_search = vec!["you".to_string()];
 
@@ -31,4 +19,20 @@ pub fn part1(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std:
     }
 
     Ok(paths.to_string())
+}
+
+fn build_graph(input: impl BufRead) -> Result<HashMap<String, HashSet<String>>, Box<dyn std::error::Error>> {
+    let lines = input.lines();
+    let graph = process_results(lines, |lines| {
+        lines
+            .map(parse_line)
+            .collect::<Result<HashMap<_, _>, _>>()
+    })?;
+    graph
+}
+
+fn parse_line(line: String) -> Result<(String, HashSet<String>), Box<dyn std::error::Error>> {
+    let (source, dests) = line.split_once(": ").ok_or("Invalid line")?;
+    let dests = dests.split(' ').map(String::from).collect::<HashSet<_>>();
+    Ok((source.to_string(), dests))
 }
