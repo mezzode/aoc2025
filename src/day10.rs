@@ -9,24 +9,7 @@ pub fn part1(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std:
 }
 
 fn solve(line: String) -> Result<usize, Box<dyn std::error::Error>> {
-    let components = line.split(' ').collect::<Vec<&str>>();
-    let [target, buttons @ .., _joltage] = components.as_slice() else {
-        return Err("Invalid line".into());
-    };
-    let target = (&target[1..target.len() - 1])
-        .chars()
-        .map(|c| -> Result<bool, Box<dyn std::error::Error>> {
-            match c {
-                '.' => Ok(false),
-                '#' => Ok(true),
-                _ => Err("Invalid char".into()),
-            }
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let buttons = buttons
-        .iter()
-        .map(parse_button)
-        .collect::<Result<Vec<_>, _>>()?;
+    let (target, buttons) = parse_line(line)?;
 
     // Every time a button is pressed more than once can just be expressed as not pressing it or pressing it once
     for num_buttons in 1..=buttons.len() {
@@ -52,6 +35,34 @@ fn solve(line: String) -> Result<usize, Box<dyn std::error::Error>> {
     }
 
     Err("No solution found".into())
+}
+
+fn parse_line(line: String) -> Result<(Vec<bool>, Vec<Vec<usize>>), Box<dyn std::error::Error>> {
+    let components = line.split(' ').collect::<Vec<&str>>();
+    let [target, buttons @ .., _joltage] = components.as_slice() else {
+        return Err("Invalid line".into());
+    };
+    Ok((parse_target(target)?, parse_buttons(buttons)?))
+}
+
+fn parse_target(target: &&str) -> Result<Vec<bool>, Box<dyn std::error::Error>> {
+    (&target[1..target.len() - 1])
+        .chars()
+        .map(|c| -> Result<bool, Box<dyn std::error::Error>> {
+            match c {
+                '.' => Ok(false),
+                '#' => Ok(true),
+                _ => Err("Invalid char".into()),
+            }
+        })
+        .collect::<Result<Vec<_>, _>>()
+}
+
+fn parse_buttons(buttons: &[&str]) -> Result<Vec<Vec<usize>>, Box<dyn std::error::Error>> {
+    buttons
+        .iter()
+        .map(parse_button)
+        .collect::<Result<Vec<_>, _>>()
 }
 
 fn parse_button(button: &&str) -> Result<Vec<usize>, Box<dyn std::error::Error>> {
