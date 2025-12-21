@@ -4,19 +4,19 @@ use std::io::BufRead;
 pub fn part1(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
     let lines = input.lines();
 
-    let total_presses = lines.map(|line| solve(line?, false)).sum::<Result<usize, _>>()?;
+    let total_presses = lines.map(|line| solve_part1(line?)).sum::<Result<usize, _>>()?;
     Ok(total_presses.to_string())
 }
 
 pub fn part2(input: impl BufRead, _verbose: bool) -> Result<String, Box<dyn std::error::Error>> {
     let lines = input.lines();
 
-    let total_presses = lines.map(|line| solve(line?, true)).sum::<Result<usize, _>>()?;
+    let total_presses = lines.map(|line| solve_part2(line?)).sum::<Result<usize, _>>()?;
     Ok(total_presses.to_string())
 }
 
-fn solve(line: String, use_joltage: bool) -> Result<usize, Box<dyn std::error::Error>> {
-    let (indicator_target, buttons, joltage_target) = parse_line(line)?;
+fn solve_part1(line: String) -> Result<usize, Box<dyn std::error::Error>> {
+    let (indicator_target, buttons, _joltage_target) = parse_line(line)?;
 
     // Every time a button is pressed more than once can just be expressed as not pressing it or pressing it once
     // TODO: For Part 2 this is not true, can press buttons multiple times to reach target joltages
@@ -31,12 +31,6 @@ fn solve(line: String, use_joltage: bool) -> Result<usize, Box<dyn std::error::E
                     acc
                 });
 
-            if use_joltage {
-                if toggles == joltage_target {
-                    return Ok(buttons_active.len());
-                }
-                continue;
-            }
             let state = toggles
                 .iter()
                 .map(|light| light % 2 == 1)
@@ -49,6 +43,29 @@ fn solve(line: String, use_joltage: bool) -> Result<usize, Box<dyn std::error::E
     }
 
     Err("No solution found".into())
+}
+
+fn solve_part2(line: String) -> Result<usize, Box<dyn std::error::Error>> {
+    let (_, buttons, joltage_target) = parse_line(line)?;
+
+    let mut num_buttons = 1;
+    loop {
+        for buttons_active in buttons.iter().combinations_with_replacement(num_buttons) {
+            let toggles = buttons_active
+                .iter()
+                .fold(vec![0; joltage_target.len()], |mut acc, button| {
+                    for i in *button {
+                        acc[*i] += 1;
+                    }
+                    acc
+                });
+
+            if toggles == joltage_target {
+                return Ok(buttons_active.len());
+            }
+        }
+        num_buttons += 1;
+    }
 }
 
 fn parse_line(
